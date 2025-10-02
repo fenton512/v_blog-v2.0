@@ -1,0 +1,21 @@
+@import 'normalize.css';
+body {
+    --main-bg-color: #91369F;
+    margin: 0;
+    font-family: 'Homer-Simpson';
+    color: white;
+}
+a {
+    color: inherit;
+    text-decoration-line: none;
+}
+* {
+  box-sizing: border-box;  
+}
+@font-face {
+    font-family: Homer-Simpson;
+    src: url(./fonts/Homer_Simpson.ttf) format("truetype");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}

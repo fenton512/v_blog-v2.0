@@ -1,11 +1,16 @@
 <template>
-  <div class="header">
-    <div class="logo">
-      <img src="./assets/logo_img.png" alt="" style="display: block; width: 100%; height: auto;">
+  <header class="header">
+    <a  href="/" class="logo">
+      <img 
+        src="./assets/logo_img.png" 
+        alt="Blog logo" 
+        style="display: block; width: 100%; height: auto;"
+        loading="lazy">
       <div class="logo-name">
         VECTOR <br> BLOG
       </div>
-    </div>
+    </a>
+    <span class="head-splitter"></span>
     <nav class="nav-menu">
       <a href="">Блог</a>
       <a href="">Анонсы</a>
@@ -13,21 +18,21 @@
     </nav>
     <div class="acc-panel">
       <img src="./assets/avatar.svg" alt="" class="avatar">
+      <span class="avatar-signature">Аккаунт</span>
       <div class="acc-links">
         <a href="">Регистрация</a>
-        |
+        <div class="rectangle"></div>
         <a href="">Вход</a>
       </div>
     </div>
-  </div>
+  </header>
   <router-view></router-view>
 </template>
 
 <script lang="ts">
 
 import { defineComponent} from 'vue';
-// import HelloWorld from './components/HelloWorld.vue';
-// import TestPage from './components/TestPage.vue';
+
 export default defineComponent({
   name: "app",
   components: {}
@@ -35,21 +40,21 @@ export default defineComponent({
 </script>
 
 <style>
-  body {
-    background-color: var(--main-bg-color);
-  }
   .header {
     display: flex;
     background-color: #682D66;
     padding: 18px 16px;
     height: 89px;
     justify-content: space-between;
+    column-gap: 10px;
+    row-gap: 5px;
   }
   .logo {
     width: 214px;
     height: auto;
     display: flex;
     align-items: center;
+    flex-shrink: 0;
   }
   .logo img {
     width: auto;
@@ -84,9 +89,69 @@ export default defineComponent({
     display: flex;
     justify-content: center;
     align-items: center;
+    column-gap: 2px;
   }
   .acc-links {
     font-weight: 500;
     font-size: 45px;
+    display: flex;
+    align-items: center;
+    column-gap: 8px;
+  }
+  .rectangle {
+    width: 3px;
+    height: 29px;
+    background-color: var(--main-font-color);
+  }
+  .avatar-signature {
+    display: none;
+  }
+  .head-splitter {
+    order: 1;
+    background-color: #fff;
+    height: 1px;
+    width: auto;
+    flex-basis: 100%;
+    display: none;
+  }
+
+  @media (max-width: 1024px) {
+    .acc-links {
+      display: none;
+    }
+    .acc-panel {
+      flex-direction: column;
+    }
+    .avatar-signature {
+      display: inline-block;
+      font-size: 20px;
+    }
+  }
+
+  @media (max-width: 800px) {
+    .nav-menu {
+      column-gap: 16px;
+    }
+  }
+
+  @media (max-width: 664px) {
+    .nav-menu {
+      order: 1;
+      /* flex-basis: 100%; */
+    }
+    .header {
+      flex-wrap: wrap;
+      height: auto;
+      justify-content: space-between;
+    }
+    .head-splitter {
+      display: inline;
+    }
+  }
+
+  @media (max-width: 391px) {
+    .nav-menu {
+      font-size: 32px;
+    }
   }
 </style>

@@ -1,16 +1,47 @@
 @import 'normalize.css';
 body {
-    --main-bg-color: #91369F;
     margin: 0;
-    font-family: 'Homer-Simpson';
-    color: white;
+    font-family: var(--font-family-base);
+
+    color: var(--main-font-color);
+    background-color: var(--main-bg-color);
+}
+.container {
+    max-width: calc(var(--container-padding-x)*2 + var(--container-width));
+    margin-inline: auto;  /*for centering*/
+
+    padding-inline: var(--container-padding-x);
 }
 a {
     color: inherit;
     text-decoration-line: none;
 }
+a,
+button,
+textarea,
+input {
+    transition-duration: var(--transition-duration);
+}
+a:hover {
+    color: var(--gray-hover-link);
+}
 * {
-  box-sizing: border-box;  
+    box-sizing: border-box;  
+}
+
+:root {
+    --main-bg-color: #91369F;
+    --main-font-color: #FFFFFF;
+    --dark-purple: #682D66;
+    --gray-hover-link: #BCBAB4;
+
+    --font-family-base: 'Homer-Simpson';
+
+    --container-width: 1116px;
+    --container-padding-x: 15px;
+
+    --transition-duration: 0.2s;
+
 }
 @font-face {
     font-family: Homer-Simpson;

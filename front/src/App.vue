@@ -16,26 +16,61 @@
       <a href="">Анонсы</a>
       <a href="">О проекте</a>
     </nav>
-    <div class="acc-panel">
+    <div class="acc-panel" @click.stop="handleAvatarClick()">
       <img src="./assets/avatar.svg" alt="" class="avatar">
-      <span class="avatar-signature">Аккаунт</span>
-      <div class="acc-links">
-        <a href="">Регистрация</a>
+      <div v-if="isLongRegistration" class="acc-links">
+        <a href="/register">Регистрация</a>
         <div class="rectangle"></div>
-        <a href="">Вход</a>
+        <a href="/login">Вход</a>
       </div>
+      <span v-else>Аккаунт</span>
     </div>
   </header>
+  <Transition name="RegLog">
+    <RegistrationPage v-if="visiableRegLog" v-click-outside="closeRegLogMenu"></RegistrationPage>
+  </Transition>
   <router-view></router-view>
 </template>
 
 <script lang="ts">
-
 import { defineComponent} from 'vue';
+import RegistrationPage from './components/RegistrationPage.vue';
 
 export default defineComponent({
+  data() {
+    return {
+       isLongRegistration: true,
+       visiableRegLog: false,
+    }
+  },
   name: "app",
-  components: {}
+  components: {
+    RegistrationPage,
+  },
+  methods: {
+    rednderAccauntSignature(): void {
+      this.isLongRegistration = window.innerWidth > 1024;
+    },
+    closeRegLogMenu(): void {
+      this.visiableRegLog = false;
+    },
+    handleAvatarClick(): void {
+      if (this.isLongRegistration) {
+        //play animation
+      }
+      else {
+        this.visiableRegLog = true;
+      }
+    }
+  },
+  mounted() {
+    this.rednderAccauntSignature();
+    window.addEventListener("resize", this.rednderAccauntSignature);
+  },
+  unmounted() {
+    window.removeEventListener("resize", this.rednderAccauntSignature);
+  }
+
 })
 </script>
 
@@ -115,6 +150,13 @@ export default defineComponent({
     display: none;
   }
 
+ .RegLog-enter-active {
+  animation: RegLogAppear 1s;
+ }
+ .RegLog-leave-active {
+  animation: RegLogAppear 0.5s reverse;
+ }
+
   @media (max-width: 1024px) {
     .acc-links {
       display: none;
@@ -137,7 +179,6 @@ export default defineComponent({
   @media (max-width: 664px) {
     .nav-menu {
       order: 1;
-      /* flex-basis: 100%; */
     }
     .header {
       flex-wrap: wrap;
@@ -152,6 +193,19 @@ export default defineComponent({
   @media (max-width: 391px) {
     .nav-menu {
       font-size: 32px;
+    }
+  }
+
+  @keyframes RegLogAppear {
+    0% {
+      opacity: 0;
+    }
+    20% {
+      transform: translateY(5%);
+      opacity: 0.2;;
+    }
+    100% {
+      opacity: 1;
     }
   }
 </style>

@@ -1,35 +1,55 @@
 <template>
-    <main  ref="myElement" class="main" :style="{width: windowWidth * 0.5 + 'px' }">
-        <!-- <div class="exitCross">&#10006;</div> -->
-        <h1>This is registration</h1>
+    <main class="main" :style="{width: elementWidth + 'px' }">
+        <div class="pictures">
+            <img :style="{width: imgWidth + 'px', height: imgWidth + 'px'}" src="../assets/vector_with_loopa.gif" alt="" class="vector">
+            <div :style="{width: cloudWidth + 'px', height: cloudWidth + 'px'}" class="cloud"> 
+                <div class="cloudText" :style="{width: cloudText + 'px'}">А я тебя вообще знаю?</div>
+            </div>        
+        </div>
+        <div class="buttons">
+            <ClassicButton :buttonWidth="buttonWidth" class="reg-log-but">войти</ClassicButton>
+            <ClassicButton :button-width="buttonWidth" class="reg-log-but">зарегистрироваться</ClassicButton>
+        </div>
     </main>
 </template>
 
 
 <script lang="ts">
 import { defineComponent } from "vue";
-
+import ClassicButton from "./ClassicButton.vue";
     export default defineComponent({
         data() {
             return {
-                windowWidth: 0,
-                elementWidth: 0.
+                elementWidth: 0,
             }
         },
         mounted() {
-            this.getWindowWidth();
-            window.addEventListener('resize', this.getWindowWidth)
+            this.getElementWidth();
+            window.addEventListener('resize', this.getElementWidth);
         },
         unmounted() {
-            window.removeEventListener('resize', this.getWindowWidth);
+            window.removeEventListener('resize', this.getElementWidth);
         },
         methods: {
-            getWindowWidth(): void {
-                this.windowWidth = (window.innerWidth);
+            getElementWidth(): void {
+                this.elementWidth = window.innerWidth*0.7;
             },
-            getElementWidth(): number {
-                const myElement = this.$refs.myElement as HTMLElement;
-                return myElement.offsetWidth;
+        },
+        components: {
+            ClassicButton
+        },
+        computed: {
+            imgWidth(): number {
+                return this.elementWidth* 0.4;
+            },
+            cloudWidth(): number {
+                return this.elementWidth*0.3;
+            },
+            buttonWidth(): number {
+                return this.elementWidth * 0.32;
+            },
+            cloudText(): number {
+                return this.cloudWidth * 0.8;
             }
         }
     })
@@ -40,18 +60,60 @@ import { defineComponent } from "vue";
 
         position: absolute;
         top: 45%;
-        left: 25%;
+        left: 15%;
 
-        background-color: gray;
+        background-color: var(--white);
         border: 4.70px solid var(--black);
         border-radius: 30px;
 
-    }
-    /* .exitCross {
-        position: absolute;
-        right: 12px;
-        top: 1px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        flex-direction: column;
+        gap: 8px;
 
-        width: 3%;
-    } */
+        padding: 12px 0;
+
+    }
+    .cloud{
+        background-image: url('../assets/phrase_cloude.svg');
+        background-size: contain;
+        background-repeat: no-repeat;
+
+        display: flex;
+        justify-content: center;
+    }
+    .cloudText {
+        z-index: 2;
+        position: relative;
+        top: 7%;
+        display: block;
+        left: 2%;
+        
+        
+        color: var(--black);
+        font-size: 3.2vw;
+    }
+    .pictures{
+        display: flex;
+        flex-direction: row;
+    }
+    .buttons{
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        
+        width: 100%;
+
+    }
+    .reg-log-but{
+        border: 2px solid var(--black);
+        background-color: var(--brown);
+
+        font-size: 1.5em;
+        /* border-radius: 34px; */
+    }
+
+    
+
 </style>

@@ -1,4 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from collections.abc import AsyncGenerator
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy.orm import DeclarativeBase
 from config import DATABASE_URL
@@ -11,3 +13,12 @@ class Base(DeclarativeBase):
     pass
 
 target_metadata = Base.metadata
+
+
+class DataBase():
+
+    @classmethod
+    async def get_async_db(cls) -> AsyncGenerator[AsyncSession, None]:
+        async with async_session_maker() as session:
+            yield session
+

@@ -1,8 +1,8 @@
 from datetime import datetime
-from database import Base
+from .base import Base
 from sqlalchemy.orm import mapped_column, Mapped, relationship, Session
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import String, ForeignKey, Table, Column, Text, Boolean, event, update
+from sqlalchemy import String, ForeignKey, Table, Column, Text, Boolean, event, update, true
 
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from .secondary_tables import users_in_group
 if TYPE_CHECKING:
     from .posts import Post
-    from .groupes import Group
+    from .groups import Group
     from .comments import Comment
     from .users import User
 
@@ -27,14 +27,14 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String, unique=True, index=True)
     nickname: Mapped[str] = mapped_column(String(15), unique=True, index=True)
-    role: Mapped[Roles] = mapped_column(String(7))
+    role: Mapped[Roles] = mapped_column(String(7), default="reader")
     password: Mapped[str] = mapped_column(String, unique=True)
-    avatar_url: Mapped[str] = mapped_column(String(120))
-    desctiption: Mapped[str] = mapped_column(Text)
-    is_active: Mapped[bool] = mapped_column(Boolean, index=True, nullable=False)
+    avatar_url: Mapped[str|None] = mapped_column(String(120), nullable=True)
+    description: Mapped[str|None] = mapped_column(Text, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, index=True, nullable=False, default=True, server_default='true')
 
     posts: Mapped[list["Post"]] = relationship("Post", back_populates="author")
-    groups: Mapped[list["Group"]] = relationship("Groupe", back_populates="users", secondary=users_in_group)
+    groups: Mapped[list["Group"]] = relationship("Group", back_populates="users", secondary=users_in_group)
     comments: Mapped[list["Comment"]] = relationship("Comment", back_populates="author" )
 # event listener for deletion User
 # when User is deleted, we change it's flag

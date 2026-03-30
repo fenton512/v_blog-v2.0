@@ -1,8 +1,26 @@
 from fastapi import FastAPI, routing
 from routes.posts import router as post_router
+from routes.users import router as token_router
+from routes.comments import router as comment_router
+from fastapi.middleware.cors import CORSMiddleware
+
+origins = [
+    "http://localhost:8080"
+]
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 app.include_router(post_router)
+app.include_router(token_router)
+app.include_router(comment_router)
+
 
 @app.get("/")
 async def start_page()-> dict[str, str]:

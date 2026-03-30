@@ -1,37 +1,52 @@
-from fastapi import APIRouter, HTTPException, status
-from shemas import BasePost as PostCreate, PostPut, PostResponse
+from fastapi import APIRouter, HTTPException, status, Depends
+
+from typing import cast
+from shemas import BasePost as PostCreate, PostPut, PostResponse, UserMainResponse
+from database import DataBase, db_post_manager, NoEntityException
+from sqlalchemy.ext.asyncio import AsyncSession
+from .users import need_admin_permission, need_writer_permission, oauth2_scheme, get_current_user, is_author
 router = APIRouter(prefix="/posts", tags=["posts"])
 
-
-fake_db:dict[int, PostResponse] = {}
-@router.get("/", response_model=dict[int, PostResponse])
-def get_all_posts()->dict[int, PostResponse] :
-    return fake_db
+@router.get("/", response_model=list[PostResponse])
+async def get_all_posts(session: AsyncSession = Depends(DataBase.get_async_db))->list[PostResponse] :
+    posts = await db_post_manager.get_all(session)
+    posts = map(PostResponse.to_pd_model, posts)
+    return cast(list[PostResponse], posts) 
 
 @router.get("/{post_id}")
-def get_post_by_id(post_id: int) -> PostResponse:
-    return fake_db[post_id]
+async def get_post_by_id(post_id: int, session: AsyncSession = Depends(DataBase.get_async_db)) -> PostResponse:
+    try:
+        return PostResponse.to_pd_model(await db_post_manager.get_by_id(post_id, session))
+    except NoEntityException as e:
+        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail=e.msg)
+        
 
-@router.post("/", response_model=PostResponse)
-def create_post(post: PostCreate)-> PostResponse:
-    new_id = len(fake_db) + 1
-    new_post = PostResponse(**post.model_dump(), id=new_id)
-    fake_db.update({new_id: new_post})
-    return new_post
+@router.post("/", dependencies=[Depends(need_writer_permission)])
+async def create_post(post: PostCreate, session: AsyncSession = Depends(DataBase.get_async_db), user: UserMainResponse = Depends(get_current_user))-> PostResponse:
+
+    new_post =(post.model_dump(exclude_defaults=True))
+    new_post.update({"author": user})
+    db_post = await db_post_manager.add_row(session, new_post)
+    return PostResponse.to_pd_model(db_post)
 
     
-@router.put("/{post_id}")
-def update_post(post_id: int, new_post: PostPut)->PostResponse:
+@router.patch("/{post_id}", dependencies=[Depends(need_writer_permission)])
+async def update_post(post_id: int, new_post: PostPut, session: AsyncSession = Depends(DataBase.get_async_db), token: str = Depends(oauth2_scheme))->PostResponse:
+    old_post = await db_post_manager.get_by_id(post_id, session)
+    if not is_author(old_post, token):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not the author of this post")
     new_post_dict = new_post.model_dump(exclude_defaults=True)
-    old_post = fake_db.get(post_id)
-    if old_post == None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    for key, value in new_post_dict.items():
-        if hasattr(old_post, key):
-            setattr(old_post, key, value)
-    return old_post
+    try:
+        new_post = await db_post_manager.update_post(post_id, new_post_dict, session)
+        return PostResponse.to_pd_model(new_post)
+    except NoEntityException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.msg)
+
 @router.delete("/{post_id}")
-def delete_post(post_id: int)-> dict[str, str]:
-    fake_db.pop(post_id)
+async def delete_post(post_id: int, session: AsyncSession = Depends(DataBase.get_async_db))-> dict[str, str]:
+    try:
+        await db_post_manager.delete_post(post_id, session)
+    except NoEntityException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.msg)
     return {"message": "deleted"}
 

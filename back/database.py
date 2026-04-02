@@ -57,7 +57,7 @@ class DataBase(abc.ABC, Generic[B]):
 
     async def get_all(self, session: AsyncSession)->Sequence[B]: 
         stmt = select(self.related_model)
-        stmt = self.add_lazy_load(stmt)
+        stmt = self.add_lazy_load(stmt).options(selectinload(PostModel.author))
         result = await session.scalars(stmt)
         return result.all()
 
@@ -105,7 +105,7 @@ class PostDBManager(DataBase[PostModel]):
         PostModel.comments, 
         PostModel.files,
         PostModel.groups, 
-        PostModel.themes
+        PostModel.themes,
         ]
     async def add_row(self, session:AsyncSession, instance_data: dict[str, Any] )->PostModel:
         files: list[FileModel] = []

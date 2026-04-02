@@ -22,24 +22,24 @@ class PostResponse(BasePost):
     comments: list["CommentResponse"] = Field (default_factory=list, description="The comments of the post")
     created_at: "CreationTime"
     updated_at: UpdationTime
+    author: "UserComment"
 
     model_config = ConfigDict(from_attributes=True)
     @classmethod
     def to_pd_model(cls, post):
         themes = [theme.name for theme in post.themes]
-
+        author = UserComment(id=post.author_id, avatar_url= post.author.avatar_url, nickname=post.author.nickname)
         return cls(
             id = post.id,
             comments = post.comments,
             themes = themes,
             created_at = post.creation_time,
             updated_at = post.updating_time,
-            text = post.text
+            text = post.text,
+            author = author
         )
 
 
-class PostWithAuthorResponse(PostResponse):
-    author: "UserMainResponse"
 class PostPut(BaseModel):
     text: str|None = Field(default=None, min_length=15, description="The text content of the post")
     files_URL: list[str]|None = Field(None, description="URL of the photos are attached to the post") 

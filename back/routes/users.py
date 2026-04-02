@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status, APIRouter
+from fastapi import Depends, HTTPException, status, APIRouter, Form
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import DataBase, db_user_manager, NoEntityException, db_token_manager, BadAttributeException
@@ -146,18 +146,26 @@ async def get_current_user(session: AsyncSession = Depends(DataBase.get_async_db
 
     
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=NewUserResponse)
-async def register(user: NewUser, session: AsyncSession = Depends(DataBase.get_async_db))-> NewUserResponse:
-    check_user = await db_user_manager.does_exist(session= session, email = user.email)
+async def register(form_data: OAuth2PasswordRequestForm = Depends(), nickname: str = Form(...), session: AsyncSession = Depends(DataBase.get_async_db))-> NewUserResponse:
+    print(1)
+    check_user = await db_user_manager.does_exist(session= session, email = form_data.username)
     if check_user is not None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User with such email already exist")
-    hashed_password = hash_password(user.password)
-    user.password = hashed_password
-    new_user = await db_user_manager.add_row(session, instance_data= user.model_dump())
+    hashed_password = hash_password(form_data.password)
+    instance_data = {
+        "email": form_data.username,
+        "password": hashed_password,
+        "nickname": nickname
+    }
+    new_user = await db_user_manager.add_row(session, instance_data=instance_data)
     data = {"sub": new_user.id, "role": new_user.role, "email": new_user.email}
     user_data = {
         "email" : new_user.email,
         "id" : new_user.id,
         "nickname" : new_user.nickname
     }
-    user_response = NewUserResponse(token = RefreshResponse(access_token=create_access_token(data=data), refresh_token=create_refresh_token(data=data), token_type="bearer"), **user_data) #type: ignore
+    refresh_token, expire =  create_refresh_token(data).values()
+    family_id = await db_token_manager.get_next_family_id(session)
+    await db_token_manager.add_row(session, instance_data=build_token_dict(family_id, refresh_token, new_user.id, expire))
+    user_response = NewUserResponse(token = RefreshResponse(access_token=create_access_token(data=data), refresh_token=refresh_token, token_type="bearer"), **user_data) #type: ignore
     return user_response

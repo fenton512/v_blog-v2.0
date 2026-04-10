@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status, APIRouter, Form
+from fastapi import Depends, HTTPException, status, APIRouter, Form, Response, Cookie
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import DataBase, db_user_manager, NoEntityException, db_token_manager, BadAttributeException
@@ -20,7 +20,10 @@ class Role(Enum):
 expired_token_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
     detail="Token has expired",
-    headers={"WWW-Authenticate": "Bearer"}
+    headers={
+        "WWW-Authenticate": "Bearer",
+        "App-Error-Code": "TOKEN EXPIRED"
+        }
     )
 
 credental_exception = HTTPException(
@@ -35,6 +38,8 @@ invalid_role_exception = HTTPException(
 )
 
 def need_admin_permission(token: str = Depends(oauth2_scheme))->None:
+    if not token:
+        raise expired_token_exception
     try:
         payload = jwt.decode(token, SECRET_KEY_ACCESS, algorithms=[ALGORITH]) #type: ignore
         role: str = payload["role"]
@@ -47,6 +52,8 @@ def need_admin_permission(token: str = Depends(oauth2_scheme))->None:
 
 
 def need_writer_permission(token: str = Depends(oauth2_scheme))->None:
+    if not token:
+        raise expired_token_exception
     try:
         payload = jwt.decode(token, SECRET_KEY_ACCESS, algorithms=[ALGORITH])#type: ignore
         role: str = payload["role"]
@@ -72,7 +79,7 @@ def build_token_dict(family_id: int, refresh_token: str, user_id: int, expired_a
 
 
 @router.post("/token", status_code=status.HTTP_201_CREATED)
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), session: AsyncSession = Depends(DataBase.get_async_db)) -> dict[str, str]:
+async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends(), session: AsyncSession = Depends(DataBase.get_async_db)) -> dict[str, str]:
     email = form_data.username
     password = form_data.password
 
@@ -80,20 +87,23 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Async
     if (user is None) or (not verify_password(password, user.password)):
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail="Email or password is not correct", headers={"WWW-Authenticate": "Bearer"})
 
-    data = {"sub": user.email, "role": user.role, "id": user.id}
+    data = {"sub": user.id, "role": user.role, "email": user.email}
     refresh_token, expire =  create_refresh_token(data).values()
     family_id = await db_token_manager.get_next_family_id(session)
     await db_token_manager.add_row(session, instance_data=build_token_dict(family_id, refresh_token, user.id, expire))
-    result = {"access_token": create_access_token(data = data), "refresh_token": refresh_token,"token_type":"bearer"}
+    result = {"access_token": create_access_token(data = data), "refresh_token": refresh_token, "token_type":"bearer"}
+    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True, path="/users/refresh", samesite='strict')
     return result
     
 
+
+
 @router.post("/refresh", status_code=status.HTTP_201_CREATED)
-async def refresh_access_token(refresh_request: RefreshRequest, session: AsyncSession = Depends(DataBase.get_async_db))-> dict: #type: ignore
-    refresh_token = refresh_request.refresh_token
+async def refresh_access_token(response: Response, session: AsyncSession = Depends(DataBase.get_async_db), refresh_token: str = Cookie(...))-> dict: #type: ignore
+    # refresh_token = refresh_token.refresh_token
     try:
         payload = jwt.decode(refresh_token, SECRET_KEY_REFRESH, algorithms=[ALGORITH] ) #type: ignore
-        id, email = payload["id"], payload["sub"]
+        id, email = payload["sub"], payload["id"]
         user = await db_user_manager.does_exist(session, id = id, email = email)
         if user is None:
             raise credental_exception
@@ -111,6 +121,7 @@ async def refresh_access_token(refresh_request: RefreshRequest, session: AsyncSe
             new_refresh_token, expire = create_refresh_token(payload).values()
             family_id = token.family_id            
             await db_token_manager.add_row(session, instance_data=build_token_dict(family_id, new_refresh_token, user.id, expire))
+            response.set_cookie(key="refresh_token", value=new_refresh_token, httponly=True, path="/users/refresh", samesite='strict')
             result = {"access_token": create_access_token(payload), "refresh_token": new_refresh_token,"token_type":"bearer"}
             return result
     except jwt.ExpiredSignatureError:
@@ -146,7 +157,7 @@ async def get_current_user(session: AsyncSession = Depends(DataBase.get_async_db
 
     
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=NewUserResponse)
-async def register(form_data: OAuth2PasswordRequestForm = Depends(), nickname: str = Form(...), session: AsyncSession = Depends(DataBase.get_async_db))-> NewUserResponse:
+async def register(response: Response, form_data: OAuth2PasswordRequestForm = Depends(), nickname: str = Form(...), session: AsyncSession = Depends(DataBase.get_async_db))-> NewUserResponse:
     print(1)
     check_user = await db_user_manager.does_exist(session= session, email = form_data.username)
     if check_user is not None:
@@ -167,5 +178,6 @@ async def register(form_data: OAuth2PasswordRequestForm = Depends(), nickname: s
     refresh_token, expire =  create_refresh_token(data).values()
     family_id = await db_token_manager.get_next_family_id(session)
     await db_token_manager.add_row(session, instance_data=build_token_dict(family_id, refresh_token, new_user.id, expire))
+    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True, path="/users/refresh", samesite='strict')
     user_response = NewUserResponse(token = RefreshResponse(access_token=create_access_token(data=data), refresh_token=refresh_token, token_type="bearer"), **user_data) #type: ignore
     return user_response

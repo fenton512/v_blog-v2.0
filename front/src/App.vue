@@ -1,6 +1,6 @@
 <template>
   <header class="header">
-    <a  href="/" class="logo">
+    <router-link  to="/" class="logo">
       <img 
         src="./assets/logo_img.png" 
         alt="Blog logo" 
@@ -9,7 +9,7 @@
       <div class="logo-name">
         VECTOR <br> BLOG
       </div>
-    </a>
+    </router-link>
     <span class="head-splitter"></span>
     <nav class="nav-menu">
       <a href="">Блог</a>
@@ -19,9 +19,9 @@
     <div class="acc-panel" @click.stop="handleAvatarClick()">
       <img src="./assets/avatar.svg" alt="" class="avatar">
       <div v-if="isLongRegistration" class="acc-links">
-        <a href="/register">Регистрация</a>
+        <router-link to="/register">Регистрация</router-link>
         <div class="rectangle"></div>
-        <a href="/login">Вход</a>
+        <router-link to="/login">Вход</router-link>
       </div>
       <span v-else>Аккаунт</span>
     </div>
@@ -34,7 +34,7 @@
 
 <script lang="ts">
 import { defineComponent} from 'vue';
-import RegistrationPage from './components/RegistrationPage.vue';
+import RegistrationPage from './components/AuthChoice.vue';
 
 export default defineComponent({
   data() {
@@ -61,7 +61,7 @@ export default defineComponent({
       else {
         this.visiableRegLog = true;
       }
-    }
+    },
   },
   mounted() {
     this.rednderAccauntSignature();

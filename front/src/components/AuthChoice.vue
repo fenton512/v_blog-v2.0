@@ -72,7 +72,8 @@ import ClassicButton from "./ClassicButton.vue";
         flex-direction: column;
         gap: 8px;
 
-        padding: 12px 0;
+        padding: 12px 0 26px;
+        box-sizing: content-box;
 
     }
     .cloud{
@@ -86,9 +87,9 @@ import ClassicButton from "./ClassicButton.vue";
     .cloudText {
         z-index: 2;
         position: relative;
-        top: 7%;
+        top: 17%;
         display: block;
-        left: 2%;
+        text-align: center;
         
         
         color: var(--black);

@@ -5,6 +5,10 @@ body {
 
     color: var(--main-font-color);
     background-color: var(--main-bg-color);
+    background-image: url('./background_right.svg'),url(./background_left.svg);
+    background-repeat: repeat-y, repeat-y;
+    background-position: right center, left center;
+    background-size: 20vw 1308px; /* or 'contain' */
 }
 .container {
     max-width: calc(var(--container-padding-x)*2 + var(--container-width));

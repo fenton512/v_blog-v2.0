@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import DataBase, db_user_manager, NoEntityException, db_token_manager, BadAttributeException
 from pydantic import SecretStr
 from shemas import NewUserResponse, BaseUser as NewUser, UserMainResponse, RefreshResponse, RefreshRequest
-from secure.token import create_access_token, hash_password, verify_password, oauth2_scheme, SECRET_KEY_ACCESS, ALGORITH, SECRET_KEY_REFRESH, hash_ref_token, create_refresh_token
+from secure.token_auth import create_access_token, hash_password, verify_password, oauth2_scheme, SECRET_KEY_ACCESS, ALGORITH, SECRET_KEY_REFRESH, hash_ref_token, create_refresh_token
 import jwt
 from models import User as UserModel, Post as PostModel, Token as TokenModel
 from enum import Enum

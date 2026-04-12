@@ -1,6 +1,9 @@
-*/.venv/
+.vscode
+.venv/
 .env
 __pycache__/
 **/__pycache__/
 .pyc
 alembic.ini
+test.py
+requirements.txt

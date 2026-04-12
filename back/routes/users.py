@@ -66,7 +66,7 @@ def need_writer_permission(token: str = Depends(oauth2_scheme))->None:
 
 def is_author(post: PostModel, token: str):
     payload = jwt.decode(token, SECRET_KEY_ACCESS, algorithms=[ALGORITH])#type: ignore
-    return post.author_id == payload["id"]
+    return post.author_id == payload["sub"]
 
 
 def build_token_dict(family_id: int, refresh_token: str, user_id: int, expired_at: datetime):
@@ -87,7 +87,7 @@ async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depen
     if (user is None) or (not verify_password(password, user.password)):
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail="Email or password is not correct", headers={"WWW-Authenticate": "Bearer"})
 
-    data = {"sub": user.id, "role": user.role, "email": user.email}
+    data = {"sub": str(user.id), "role": user.role, "email": user.email}
     refresh_token, expire =  create_refresh_token(data).values()
     family_id = await db_token_manager.get_next_family_id(session)
     await db_token_manager.add_row(session, instance_data=build_token_dict(family_id, refresh_token, user.id, expire))
@@ -103,8 +103,8 @@ async def refresh_access_token(response: Response, session: AsyncSession = Depen
     # refresh_token = refresh_token.refresh_token
     try:
         payload = jwt.decode(refresh_token, SECRET_KEY_REFRESH, algorithms=[ALGORITH] ) #type: ignore
-        id, email = payload["sub"], payload["id"]
-        user = await db_user_manager.does_exist(session, id = id, email = email)
+        id, email = payload["sub"], payload["email"]
+        user = await db_user_manager.does_exist(session, id = int(id), email = email)
         if user is None:
             raise credental_exception
         token = await db_token_manager.does_exist(session, token_hash = hash_ref_token(refresh_token))
@@ -138,7 +138,7 @@ async def refresh_access_token(response: Response, session: AsyncSession = Depen
 async def get_current_user(session: AsyncSession = Depends(DataBase.get_async_db), token: str = Depends(oauth2_scheme))->UserMainResponse:
     try:
         payload = jwt.decode(token, SECRET_KEY_ACCESS, algorithms=[ALGORITH]) #type: ignore
-        id: int = int(payload["id"])
+        id: int = int(payload["sub"])
         if id is None:
             raise credental_exception
         user = await db_user_manager.get_by_id(id, session)
@@ -169,7 +169,7 @@ async def register(response: Response, form_data: OAuth2PasswordRequestForm = De
         "nickname": nickname
     }
     new_user = await db_user_manager.add_row(session, instance_data=instance_data)
-    data = {"sub": new_user.id, "role": new_user.role, "email": new_user.email}
+    data = {"sub": str(new_user.id), "role": new_user.role, "email": new_user.email}
     user_data = {
         "email" : new_user.email,
         "id" : new_user.id,

@@ -247,7 +247,7 @@ class TokenDbManager(DataBase[TokenModel]):
         result = await session.scalars(stmt)
         result = result.first()
         if result is None:
-            stmt = select(func.count(self.related_model))
+            stmt = select(func.count(self.related_model.id))
             result = await session.scalars(stmt)
             result = result.first()
             if result == 0:

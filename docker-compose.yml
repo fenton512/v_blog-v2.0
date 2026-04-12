@@ -1,0 +1,32 @@
+services:
+  front:
+    build: 
+      context: ./front
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    env_file:
+      - .env
+  web:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=${DATEBASE_URL}
+      - SECRET_KEY_ACCESS=${SECRET_KEY_ACCESS}
+      - SECRET_KEY_REFRESH=${SECRET_KEY_REFRESH}
+      - ALGORITHM=${ALGORITHM}
+  db:
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    image: postgres:alpine
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+volumes:
+  db-data:

@@ -1,11 +1,11 @@
 import { defineStore } from "pinia";
-import { TokenType, HTTPErrType} from "@/types";
+import { TokenType, HTTPErrType, CurrentUserType} from "@/types";
 import { refreshFetch } from "@/scripts/refresh_fetch";
 
 
 export const useUserStore = defineStore("UserStore", {
     state: () => ({
-        currentUser: null,
+        currentUser: null as CurrentUserType|null,
         refreshToken: "",
         accessToken: "",
         _is_refreshing: null as Promise<boolean> | null

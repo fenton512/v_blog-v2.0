@@ -9,6 +9,15 @@ export interface PostType {
     
 }
 
+export interface CurrentUserType {
+    id: number,
+    email: string,
+    nickname: string,
+    role: string,
+    avatat_url: string,
+    description: string
+}
+
 export interface AuthorType {
     nickname: string,
     id: number,

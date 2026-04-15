@@ -7,12 +7,17 @@ services:
       - 8080:8080
     env_file:
       - .env
+    volumes: #for development
+      - ./front:/app
+      - /app/node_modules
+    command: npm run serve
   web:
     build:
       context: ./back
       dockerfile: Dockerfile
     ports:
       - 8000:8000
+      - 5678:5678 #for development
     depends_on:
       - db
     environment:

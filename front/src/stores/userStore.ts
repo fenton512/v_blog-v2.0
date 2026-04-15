@@ -10,6 +10,7 @@ export const useUserStore = defineStore("UserStore", {
         accessToken: "",
         _is_refreshing: null as Promise<boolean> | null
     }),
+    persist: true,
     actions: {
         async refresh(): Promise<boolean> {
             if (this._is_refreshing) {

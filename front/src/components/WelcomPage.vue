@@ -4,8 +4,9 @@
         <textarea name="newPost" id="" v-model="newPostText"></textarea>
         <button @click="writePost">ЗАПОСТИТЬ</button>
     </div>
-    <button @click="fetchAllPosts">Get all posts</button>
-    <Post v-for="post in posts" :key="post.id" :post="post" @update-comment="(newComment) => {post.comments.push(newComment)}"></Post>
+    <div class="post-container">
+            <Post v-for="post in posts" :key="post.id" :post="post" @update-comment="(newComment) => {post.comments.push(newComment)}"></Post>
+    </div>
     <button @click="() => {userStore.getCurrentUser()}"></button>
 </template>
 
@@ -76,3 +77,10 @@ export default defineComponent({
     }
 })
 </script>
+
+<style>
+.post-container {
+    display: flex;
+    justify-content: center;
+}
+</style>

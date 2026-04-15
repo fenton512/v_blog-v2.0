@@ -82,15 +82,17 @@ export default defineComponent({
   async created() {
     const address = process.env.VUE_APP_ROOT_ADDRESS
     try {
-      const currentUserResponse = await refreshFetch(`${address}/users/me`, {
-          method: "GET"
-        })
-      const currentUser = await currentUserResponse.json()
-      this.userStore.currentUser = currentUser as CurrentUserType
-    } catch (e) {
-      const error = e as HTTPErrType
-      console.error(error)
-      alert(error.detail)
+      if (!this.userStore.currentUser) {
+        const currentUserResponse = await refreshFetch(`${address}/users/me`, {
+            method: "GET"
+          })
+        const currentUser = await currentUserResponse.json()
+        this.userStore.currentUser = currentUser as CurrentUserType
+      } 
+    }catch (e) {
+        const error = e as HTTPErrType
+        console.error(error)
+        alert(error.detail)
     }
   }
 

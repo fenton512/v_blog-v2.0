@@ -16,14 +16,17 @@
       <a href="">Анонсы</a>
       <a href="">О проекте</a>
     </nav>
-    <div class="acc-panel" @click.stop="handleAvatarClick()">
+    <div class="acc-container">
       <img src="./assets/avatar.svg" alt="" class="avatar">
-      <div v-if="isLongRegistration" class="acc-links">
-        <router-link to="/register">Регистрация</router-link>
-        <div class="rectangle"></div>
-        <router-link to="/login">Вход</router-link>
+      <router-link to="/me" v-if="userStore.currentUser" class="header-nickname" >{{ userStore.currentUser.nickname }}</router-link>
+      <div v-else class="acc-panel" @click.stop="handleAvatarClick()">
+        <div v-if="isLongRegistration" class="acc-links">
+          <router-link to="/register">Регистрация</router-link>
+          <div class="rectangle"></div>
+          <router-link to="/login">Вход</router-link>
+        </div>
+        <span v-else>Аккаунт</span>
       </div>
-      <span v-else>Аккаунт</span>
     </div>
   </header>
   <Transition name="RegLog">
@@ -35,8 +38,14 @@
 <script lang="ts">
 import { defineComponent} from 'vue';
 import RegistrationPage from './components/AuthChoice.vue';
-
+import { useUserStore } from './stores/userStore';
+import { refreshFetch } from './scripts/refresh_fetch';
+import { CurrentUserType, HTTPErrType } from './types';
 export default defineComponent({
+  setup() {
+    const userStore = useUserStore()
+    return {userStore}
+  },
   data() {
     return {
        isLongRegistration: true,
@@ -61,7 +70,7 @@ export default defineComponent({
       else {
         this.visiableRegLog = true;
       }
-    },
+    }
   },
   mounted() {
     this.rednderAccauntSignature();
@@ -69,6 +78,20 @@ export default defineComponent({
   },
   unmounted() {
     window.removeEventListener("resize", this.rednderAccauntSignature);
+  },
+  async created() {
+    const address = process.env.VUE_APP_ROOT_ADDRESS
+    try {
+      const currentUserResponse = await refreshFetch(`${address}/users/me`, {
+          method: "GET"
+        })
+      const currentUser = await currentUserResponse.json()
+      this.userStore.currentUser = currentUser as CurrentUserType
+    } catch (e) {
+      const error = e as HTTPErrType
+      console.error(error)
+      alert(error.detail)
+    }
   }
 
 })
@@ -119,6 +142,12 @@ export default defineComponent({
     align-items: center;
     justify-content: center;
     gap: 48px;
+  }
+  .acc-container {
+    display: flex;
+  }
+  .header-nickname {
+    font-size: 45px;
   }
   .acc-panel {
     display: flex;

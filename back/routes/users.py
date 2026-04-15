@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status, APIRouter, Form, Response, Cookie
+from fastapi import Depends, HTTPException, status, APIRouter, Form, Response, Cookie, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import DataBase, db_user_manager, NoEntityException, db_token_manager, BadAttributeException
@@ -8,7 +8,7 @@ from secure.token_auth import create_access_token, hash_password, verify_passwor
 import jwt
 from models import User as UserModel, Post as PostModel, Token as TokenModel
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -92,14 +92,24 @@ async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depen
     family_id = await db_token_manager.get_next_family_id(session)
     await db_token_manager.add_row(session, instance_data=build_token_dict(family_id, refresh_token, user.id, expire))
     result = {"access_token": create_access_token(data = data), "refresh_token": refresh_token, "token_type":"bearer"}
-    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True, path="/users/refresh", samesite='strict')
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        path="/users/refresh",
+        samesite='strict',
+        expires=timedelta(days=100) + datetime.now(timezone.utc)
+    )
     return result
     
 
 
 
 @router.post("/refresh", status_code=status.HTTP_201_CREATED)
-async def refresh_access_token(response: Response, session: AsyncSession = Depends(DataBase.get_async_db), refresh_token: str = Cookie(...))-> dict: #type: ignore
+async def refresh_access_token(
+    response: Response, 
+    session: AsyncSession = Depends(DataBase.get_async_db), 
+    refresh_token: str = Cookie(...))-> dict: #type: ignore
     # refresh_token = refresh_token.refresh_token
     try:
         payload = jwt.decode(refresh_token, SECRET_KEY_REFRESH, algorithms=[ALGORITH] ) #type: ignore
@@ -121,7 +131,14 @@ async def refresh_access_token(response: Response, session: AsyncSession = Depen
             new_refresh_token, expire = create_refresh_token(payload).values()
             family_id = token.family_id            
             await db_token_manager.add_row(session, instance_data=build_token_dict(family_id, new_refresh_token, user.id, expire))
-            response.set_cookie(key="refresh_token", value=new_refresh_token, httponly=True, path="/users/refresh", samesite='strict')
+            response.set_cookie(
+                key="refresh_token",
+                value=refresh_token,
+                httponly=True,
+                path="/users/refresh",
+                samesite='strict',
+                expires=timedelta(days=100) + datetime.now(timezone.utc)
+            )
             result = {"access_token": create_access_token(payload), "refresh_token": new_refresh_token,"token_type":"bearer"}
             return result
     except jwt.ExpiredSignatureError:
@@ -137,6 +154,8 @@ async def refresh_access_token(response: Response, session: AsyncSession = Depen
 @router.get("/me")
 async def get_current_user(session: AsyncSession = Depends(DataBase.get_async_db), token: str = Depends(oauth2_scheme))->UserMainResponse:
     try:
+        if not token:
+            raise expired_token_exception
         payload = jwt.decode(token, SECRET_KEY_ACCESS, algorithms=[ALGORITH]) #type: ignore
         id: int = int(payload["sub"])
         if id is None:
@@ -178,6 +197,13 @@ async def register(response: Response, form_data: OAuth2PasswordRequestForm = De
     refresh_token, expire =  create_refresh_token(data).values()
     family_id = await db_token_manager.get_next_family_id(session)
     await db_token_manager.add_row(session, instance_data=build_token_dict(family_id, refresh_token, new_user.id, expire))
-    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True, path="/users/refresh", samesite='strict')
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        path="/users/refresh",
+        samesite='strict',
+        expires=timedelta(days=100) + datetime.now(timezone.utc)
+    )
     user_response = NewUserResponse(token = RefreshResponse(access_token=create_access_token(data=data), refresh_token=refresh_token, token_type="bearer"), **user_data) #type: ignore
     return user_response

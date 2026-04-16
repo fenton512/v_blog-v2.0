@@ -1,23 +1,30 @@
+networks:
+  dev:
+
 services:
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - 80:80
+    volumes:
+      - './nginx.conf:/etc/nginx/nginx.conf'
+    depends_on:
+      - web
+      - front
+    networks:
+      - dev
   front:
     build: 
       context: ./front
       dockerfile: Dockerfile
-    ports:
-      - 8080:8080
     env_file:
       - .env
-    volumes: #for development
-      - ./front:/app
-      - /app/node_modules
-    command: npm run serve
+    networks:
+      - dev
   web:
     build:
       context: ./back
       dockerfile: Dockerfile
-    ports:
-      - 8000:8000
-      - 5678:5678 #for development
     depends_on:
       - db
     environment:
@@ -25,6 +32,8 @@ services:
       - SECRET_KEY_ACCESS=${SECRET_KEY_ACCESS}
       - SECRET_KEY_REFRESH=${SECRET_KEY_REFRESH}
       - ALGORITHM=${ALGORITHM}
+    networks:
+      - dev
   db:
     volumes:
       - db-data:/var/lib/postgresql/data
@@ -33,5 +42,7 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      - dev
 volumes:
   db-data:

@@ -13,10 +13,10 @@ RUN npm run build
 
 FROM nginx:stable-alpine
 
-COPY --from=builder /dist /usr/share/nginx/html
+COPY --from=builder app/dist /usr/share/nginx/html
 
 EXPOSE 8080
 
-COPY --from=builder ./nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder app/nginx.conf /etc/nginx/conf.d/default.conf
 
 CMD [ "nginx", "-g", "daemon off;" ]

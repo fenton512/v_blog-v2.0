@@ -5,7 +5,8 @@ from routes.comments import router as comment_router
 from fastapi.middleware.cors import CORSMiddleware
 
 origins = [
-    "http://localhost:8080"
+    "http://localhost:8080",
+    "http://193.108.113.5"
 ]
 
 app = FastAPI()

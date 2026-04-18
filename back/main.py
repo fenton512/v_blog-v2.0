@@ -8,7 +8,7 @@ import uvicorn
 origins = [
     "http://localhost:8080",
     "http://193.108.113.5",
-    "vector-blog.ru"
+    "http://vector-blog.ru"
 ]
 
 app = FastAPI()

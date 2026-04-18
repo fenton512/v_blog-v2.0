@@ -28,7 +28,7 @@ export default defineComponent({
     },
     methods: {
         async fetchAllPosts(): Promise<void> {
-            const response = await fetch(`${address}/api/posts/`, {
+            const response = await fetch(`${address}/posts/`, {
                 method: "GET",
                 headers: {
                     "Content-Type": 'application/json'

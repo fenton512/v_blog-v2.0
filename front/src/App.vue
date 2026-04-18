@@ -83,7 +83,7 @@ export default defineComponent({
     const address = process.env.VUE_APP_ROOT_ADDRESS
     try {
       if (!this.userStore.currentUser) {
-        const currentUserResponse = await refreshFetch(`${address}/api/users/me`, {
+        const currentUserResponse = await refreshFetch(`${address}/users/me`, {
             method: "GET"
           })
         const currentUser = await currentUserResponse.json()

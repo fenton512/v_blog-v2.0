@@ -17,8 +17,8 @@ jobs:
 
       - name: Build and run docker-compose
         run: |
-          docker-compose up -d --build
-          docker-compose ps
+          docker compose up -d --build
+          docker compose ps
 
   deploy:
     needs: build-and-test

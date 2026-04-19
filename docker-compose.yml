@@ -30,7 +30,6 @@ services:
       - SECRET_KEY_ACCESS=${SECRET_KEY_ACCESS}
       - SECRET_KEY_REFRESH=${SECRET_KEY_REFRESH}
       - ALGORITHM=${ALGORITHM}
-      - PGDATA=/var/lib/postgresql/data
     networks:
       - dev
   db:
@@ -38,6 +37,7 @@ services:
       - db-data:/var/lib/postgresql/data
     image: postgres:alpine
     environment:
+      - PGDATA=/var/lib/postgresql/data
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}

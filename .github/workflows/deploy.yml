@@ -52,7 +52,7 @@ jobs:
             cd ~/viktor
             BACKUP_NAME=db_backup_$(date +%Y%m%d_%H%M%S).sql
             docker compose exec db pg_dump -U $POSTGRES_USER -d $POSTGRES_DB > $BACKUP_NAME
-            docker cp viktor-db-1:/$BACKUP_NAME ./back/db_backups 
+            docker cp viktor-db-1:/$BACKUP_NAME back/db_backups 
             git pull origin deploy
             docker compose down
             docker compose up -d --build

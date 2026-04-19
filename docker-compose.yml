@@ -30,6 +30,7 @@ services:
       - SECRET_KEY_ACCESS=${SECRET_KEY_ACCESS}
       - SECRET_KEY_REFRESH=${SECRET_KEY_REFRESH}
       - ALGORITHM=${ALGORITHM}
+      - PGDATA=/var/lib/postgresql/data
     networks:
       - dev
   db:

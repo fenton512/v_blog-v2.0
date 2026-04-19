@@ -16,7 +16,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Create .env
-          run: |
+        run: |
             # Frontend env
             echo "VUE_APP_HOST=${{ secrets.VUE_APP_HOST }}" >> front/.env
             echo "VUE_APP_ROOT_ADDRESS=${{ secrets.VUE_APP_ROOT_ADDRESS }}" >> front/.env

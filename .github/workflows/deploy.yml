@@ -15,6 +15,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Create .env
+        run: |
+          echo "VUE_APP_HOST=${{ secrets.VUE_APP_HOST }}" >> front/.env
+          echo "VUE_APP_ROOT_ADDRESS=${{ secrets.VUE_APP_ROOT_ADDRESS }}" >> front/.env
+
       - name: Build and run docker-compose
         run: |
           docker compose up -d --build

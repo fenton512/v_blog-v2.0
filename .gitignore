@@ -5,4 +5,4 @@ __pycache__/
 **/__pycache__/
 .pyc
 test.py
-back/db_backups
+back/db_backups/

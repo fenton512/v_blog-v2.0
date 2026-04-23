@@ -7,12 +7,6 @@ COPY config.py requirements.txt alembic.ini ./
 RUN pip install -r ./requirements.txt && \
     pip install uvicorn[standard]
 
-COPY migrations ./migrations
-COPY secure ./secure
-COPY main.py ./
-COPY shemas.py database.py ./
-COPY routes ./routes
-COPY models ./models
+COPY . .
 
-# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-CMD python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m uvicorn main:app --host 0.0.0.0 --port 8000
+CMD [ "python3", "main.py"]

@@ -37,6 +37,16 @@ invalid_role_exception = HTTPException(
     detail="This feature is not abaliable for you"
 )
 
+def set_refresh_cookie(response: Response, value: str, expires:datetime = timedelta(days=100) + datetime.now(timezone.utc)) -> None:
+    response.set_cookie(
+        key="refresh_token",
+        value=value,
+        httponly=True,
+        path="/users/refresh",
+        samesite='strict',
+        expires=expires
+    )
+
 def need_admin_permission(token: str = Depends(oauth2_scheme))->None:
     if not token:
         raise expired_token_exception
@@ -92,17 +102,22 @@ async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depen
     family_id = await db_token_manager.get_next_family_id(session)
     await db_token_manager.add_row(session, instance_data=build_token_dict(family_id, refresh_token, user.id, expire))
     result = {"access_token": create_access_token(data = data), "refresh_token": refresh_token, "token_type":"bearer"}
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        path="/users/refresh",
-        samesite='strict',
-        expires=timedelta(days=100) + datetime.now(timezone.utc)
-    )
+    set_refresh_cookie(response, refresh_token)
     return result
     
 
+@router.patch("/refresh/logout")
+async def logout(response: Response, 
+                 refresh_token: str = Cookie(...), 
+                 session: AsyncSession = Depends(DataBase.get_async_db)
+                ) -> dict[str, str]:
+    token = await db_token_manager.does_exist(session, token_hash = hash_ref_token(refresh_token))
+    if token is  None:
+        raise credental_exception
+    await db_token_manager.make_inactive(session, instanse=token)
+    await session.commit()
+    set_refresh_cookie(response, refresh_token, expires=datetime.now(timezone.utc)-timedelta(days=5))
+    return {"message": "logout is success"}
 
 
 @router.post("/refresh", status_code=status.HTTP_201_CREATED)
@@ -131,14 +146,7 @@ async def refresh_access_token(
             new_refresh_token, expire = create_refresh_token(payload).values()
             family_id = token.family_id            
             await db_token_manager.add_row(session, instance_data=build_token_dict(family_id, new_refresh_token, user.id, expire))
-            response.set_cookie(
-                key="refresh_token",
-                value=refresh_token,
-                httponly=True,
-                path="/users/refresh",
-                samesite='strict',
-                expires=timedelta(days=100) + datetime.now(timezone.utc)
-            )
+            set_refresh_cookie(response, refresh_token)
             result = {"access_token": create_access_token(payload), "refresh_token": new_refresh_token,"token_type":"bearer"}
             return result
     except jwt.ExpiredSignatureError:
@@ -197,13 +205,6 @@ async def register(response: Response, form_data: OAuth2PasswordRequestForm = De
     refresh_token, expire =  create_refresh_token(data).values()
     family_id = await db_token_manager.get_next_family_id(session)
     await db_token_manager.add_row(session, instance_data=build_token_dict(family_id, refresh_token, new_user.id, expire))
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        path="/users/refresh",
-        samesite='strict',
-        expires=timedelta(days=100) + datetime.now(timezone.utc)
-    )
+    set_refresh_cookie(response, refresh_token)
     user_response = NewUserResponse(token = RefreshResponse(access_token=create_access_token(data=data), refresh_token=refresh_token, token_type="bearer"), **user_data) #type: ignore
     return user_response

@@ -6,7 +6,6 @@ import { refreshFetch } from "@/scripts/refresh_fetch";
 export const useUserStore = defineStore("UserStore", {
     state: () => ({
         currentUser: null as CurrentUserType|null,
-        refreshToken: "",
         accessToken: "",
         _is_refreshing: null as Promise<boolean> | null
     }),
@@ -47,9 +46,8 @@ export const useUserStore = defineStore("UserStore", {
            })();
            return this._is_refreshing
         },
-        logout:  () => {
+        logout()  {
             (this as any).currentUser = null,
-            (this as any).refreshToken = "",
             (this as any).accessToken = ""
         },
         async getCurrentUser(): Promise<void>{

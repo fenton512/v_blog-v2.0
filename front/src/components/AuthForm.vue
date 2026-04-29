@@ -35,7 +35,7 @@ export default defineComponent({
                 })
                 let currentUser = await currentUserRequest.json()
                 this.userStore.currentUser = currentUser
-                console.log(this.userStore.accessToken, this.userStore.refreshToken, this.userStore.currentUser)
+                console.log(this.userStore.accessToken, this.userStore.currentUser)
             } 
             catch (e) {
                 const err = e as HTTPErrType

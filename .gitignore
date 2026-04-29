@@ -6,3 +6,5 @@ __pycache__/
 .pyc
 test.py
 back/db_backups/
+*.env
+start_dev.bash
